@@ -1,0 +1,36 @@
+model Observer
+
+class Observer
+attributes
+operations
+  notify()
+    begin
+      declare awake:Boolean;
+      awake:=true;
+    end
+
+end
+
+class Subject
+attributes
+  set:Observer
+operations
+  registerObs(obs:Observer)
+    begin
+      self.set:=obs;
+    end
+  unregisterObs(obs:Observer)
+    begin
+      declare tempObs:Observer;
+      self.set:=tempObs;
+    end
+  notifyObs()
+    begin
+      self.set.notify();
+    end
+end
+
+aggregation Observes between
+  Subject [1] role Subject
+  Observer [0..*] role Observee
+end

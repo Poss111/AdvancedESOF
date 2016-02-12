@@ -1,0 +1,46 @@
+use> check
+checking structure...
+checked structure in 2ms.
+checking invariants...
+checking invariant (1) `Customer::agreement': OK.
+checking invariant (2) `Customer::daysRented': OK.
+checking invariant (3) `Customer::maxRental': OK.
+checking invariant (4) `Customer::rentals': OK.
+checked 4 invariants in 0.006s, 0 failures.
+use> !create c1:Customer
+use> !create m1:Movie
+use> !create r1:Rental
+use> !insert (c1,r1) into custRentals
+use> !insert(r1,m1) into moveRental
+<input>:1:0: Association `moveRental' does not exist.
+use> !insert(r1,m1) into movRental
+use> !create m2:Movie
+use> !create r2:Rental
+use> !insert (c1, r2) into custRentals
+use> !insert (r2, m2) into movRental
+use> !set m1.priceCode := PriceCode::regular
+use> !setm1.title := 'Deadpool;
+<input>:line 1:25 mismatched character '<EOF>' expecting '''
+<input>:line 1:0 no viable alternative at input 'setm1'
+use> !setm1.title := 'Deadpool'
+<input>:1:0: Variable `setm1' in expression `setm1' is undefined.
+use> !set m1.title := 'Deadpool'
+use> !set r1.daysRented := 3
+use> !set m2.priceCode := 2
+<input>:1:0: Type mismatch in assignment expression. Expected type `PriceCode', found `Integer'.
+use> !set m2.priceCode := PriceCode::newRelease
+use> !set r2.daysRented := 5
+use> !set m2.title := 'Civil War'
+use> !set c1.name := 'Ben Odefart'
+use> !set c1.numRen := 2
+use> check
+checking structure...
+checked structure in 1ms.
+checking invariants...
+checking invariant (1) `Customer::agreement': OK.
+checking invariant (2) `Customer::daysRented': OK.
+checking invariant (3) `Customer::maxRental': OK.
+checking invariant (4) `Customer::rentals': OK.
+checked 4 invariants in 0.004s, 0 failures.
+use> !c1.Statement()
+use>
