@@ -18,10 +18,10 @@ class neutral < FPSState
     seeOpponent(defeatable:Boolean)
     begin
       if (defeatable) then
-        self.Play.FPSState := self.Play.attack
+        self.play.fpsState := self.play.attackState
       end;
       if (defeatable = false) then
-        self.Play.FPSState := self.Play.panic
+        self.play.fpsState := self.play.panicState
       end;
     end
 
@@ -41,12 +41,12 @@ class attack < FPSState
 
   lostOpponent()
     begin
-      self.Play.FPSState := self.Play.neutral;
+      self.play.fpsState := self.play.neutralState;
     end
   receiveBlow(health:Integer)
     begin
-      if (health == 0) then
-        self.Play.FPSState := self.Play.die
+      if (health = 0) then
+        self.play.fpsState := self.play.dieState
       end;
     end
 end
@@ -59,21 +59,21 @@ class panic < FPSState
 
   lostOpponent()
     begin
-      self.Play.FPSState := self.Play.neutral;
+      self.play.fpsState := self.play.neutralState;
     end
   receiveBlow(health:Integer)
     begin
       if (health >= 0) then
-        self.Play.FPSState := self.Play.die
+        self.play.fpsState := self.play.dieState;
       end;
     end
 end
 
-class die < FPSstate
+class die < FPSState
   operations
     seeOpponent(defeatable:Boolean)
-    begin
-    end
+      begin
+      end
 
     lostOpponent()
       begin
@@ -86,63 +86,42 @@ end
 class Play
   attributes
     health : Integer init : 10
+    fpsState : FPSState
     neutralState : FPSState
     attackState : FPSState
     panicState : FPSState
     dieState : FPSState
 
   operations
-  initInstance()
-  begin
-    self.neutralState := new neutral;
-    self.attackState := new attack;
-    self.panicState := new panic;
-    self.dieState := new die;
-
-    self.FPSState := self.neutralState; -- We are starting in neutral
-  end
-
-  seeOpponent(defeatable:Boolean)
+    initInstance()
     begin
-      self.Play.seeOpponent(defeatable);
+      self.health := 10;
+      self.neutralState := new neutral;
+      self.attackState := new attack;
+      self.panicState := new panic;
+      self.dieState := new die;
+
+      self.fpsState := self.neutralState; -- We are starting in neutral
     end
 
-  lostOpponent()
-    begin
-      self.Play.lostOpponent();
-    end
+    seeOpponent(defeatable:Boolean)
+      begin
+        self.fpsState.seeOpponent(defeatable);
+      end
 
-  recieveBlow(health:Integer)
-    begin
-      self.Play.recieveBlow(health);
-    end
+    lostOpponent()
+      begin
+        self.fpsState.lostOpponent();
+      end
 
-statemachines
-  psm StatePattern
-    states
-      startUp:initial
-        neutral           [FPSState = neutralState]
-        attack            [FPSState = attackState]
-        panic             [FPSState = panicState]
-        die               [FPSState = dieState]
-      transitions
-        startUp -> neutral {create}
-    end
-  psm Usage
-    states
-      startUp:initial
-      neutral     []
-      attack      []
-      panic       []
-      die         []
-    transitions
-      startUp -> neutral {create}
-      neutral -> attack  { [health > 0] seeOpponent() [defeatable = true]}
-      neutral -> panic   { [health > 0] seeOpponent() [defeatable == false]}
-      attack -> neutral  { lostOpponent()}
-      attack -> die      { [health > 0] receiveBlow() [health <=0]}
-      panic -> neutral   { lostOpponent()}
-      panic -> die       { [health > 0] receiveBlow() [health >= 0]}
-      die -> die
-  end
+    receiveBlow(health:Integer)
+      begin
+        self.fpsState.receiveBlow(health);
+      end
+end
+
+-- associations
+association fpsState between
+ FPSState[1]
+ Play[1]
 end

@@ -1,0 +1,29 @@
+
+statemachines
+  psm StatePattern
+    states
+      startUp:initial
+        neutral           [FPSState = neutralState]
+        attack            [FPSState = attackState]
+        panic             [FPSState = panicState]
+        die               [FPSState = dieState]
+      transitions
+        startUp -> neutral {create}
+    end
+  psm Usage
+    states
+      startUp:initial
+      neutral     [FPSState = neutralState]
+      attack      [FPSState = attackState]
+      panic       [FPSState = panicState]
+      die         [FPSState = dieState]
+    transitions
+      startUp -> neutral {create}
+      neutral -> attack  { [health > 0] seeOpponent() [defeatable = true]}
+      neutral -> panic   { [health > 0] seeOpponent() [defeatable = false]}
+      attack -> neutral  { lostOpponent()}
+      attack -> die      { [health > 0] receiveBlow() [health <=0]}
+      panic -> neutral   { lostOpponent()}
+      panic -> die       { [health > 0] receiveBlow() [health >= 0]}
+      die -> die
+  end
