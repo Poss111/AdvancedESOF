@@ -86,6 +86,7 @@ end
 class Play
   attributes
     health : Integer init : 10
+    defeatable : Boolean
     fpsState : FPSState
     neutralState : FPSState
     attackState : FPSState
@@ -96,6 +97,7 @@ class Play
     initInstance()
     begin
       self.health := 10;
+      self.defeatable := true;
       self.neutralState := new neutral;
       self.attackState := new attack;
       self.panicState := new panic;
@@ -118,6 +120,38 @@ class Play
       begin
         self.fpsState.receiveBlow(health);
       end
+
+  statemachines
+    psm StatePattern
+    states
+      startUp:initial
+    neutral       [fpsState = neutralState]
+    attack        [fpsState = attackState]
+    panic         [fpsState = panicState]
+    die           [fpsState = dieState]
+    transitions
+      startUp -> neutral {create}
+    neutral -> attack { [health > 0 and defeatable = true]  seeOpponent() }
+    neutral -> panic  { [health > 0 and defeatable = false] seeOpponent()}
+    attack  -> neutral{ [health > 0 ] receiveBlow()}
+    attack  -> die    { [health <= 0] receiveBlow()}
+    panic   -> neutral{ [health > 0 ] receiveBlow()}
+    panic   -> die    { [health <= 0] receiveBlow()}
+  end
+
+    psm Usage
+    states
+      startUp:initial
+
+      neutral [health = 1 and defeatable = true]
+      attack  [health = 1]
+      panic   [health = 1]
+      die     [health = 0]
+
+    transitions
+      startUp -> neutral      { create }
+      neutral -> attack       { [health > 0 ] seeOpponent() [defeatable = true] }
+    end
 end
 
 -- associations
