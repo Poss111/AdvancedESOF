@@ -22,7 +22,7 @@ class neutral < FPSState
         self.play.fpsState := self.play.attackState
       end;
       if (defeatable = false) then
-        WriteLine ('see opponent, and is not defeatable. Panic!');
+        WriteLine ('See opponent, and is not defeatable. Panic!');
         self.play.fpsState := self.play.panicState
       end;
     end
@@ -47,7 +47,7 @@ class attack < FPSState
   lostOpponent()
     begin
       WriteLine('Lost to opponent, but not dead. Return to Idle');
-      self.play.fpsState := self.play.neutralState;
+      self.play.fpsState := self.play.neutralState
     end
   receiveBlow(health:Integer)
     begin
@@ -67,7 +67,7 @@ class panic < FPSState
   lostOpponent()
     begin
       WriteLine('Lost to opponent, and not dead. Return to Idle.');
-      self.play.fpsState := self.play.neutralState;
+      self.play.fpsState := self.play.neutralState
     end
   receiveBlow(health:Integer)
     begin
@@ -131,7 +131,7 @@ end
 
 class Play
   attributes
-    health : Integer init : 0
+    health : Integer init : 10
     fpsState : FPSState
     neutralState : FPSState
     attackState : FPSState
@@ -141,7 +141,6 @@ class Play
   operations
     initInstance()
     begin
-      self.health := 10;
       self.neutralState := new neutral;
       self.attackState := new attack;
       self.panicState := new panic;
@@ -169,18 +168,25 @@ class Play
     psm StatePattern
     states
       startUp:initial
-    neutral       [fpsState = neutralState]
-    attack        [fpsState = attackState]
-    panic         [fpsState = panicState]
-    die           [fpsState = dieState]
+      neutral       [self.fpsState = neutralState]
+      attack        [self.fpsState = attackState]
+      panic         [self.fpsState = panicState]
+      die           [self.fpsState = dieState]
     transitions
       startUp -> neutral {create}
       neutral -> attack { [health > 0 and defeatable = true]  seeOpponent()}
       neutral -> panic  { [health > 0 and defeatable = false] seeOpponent()}
+      neutral -> neutral { [fpsState = neutralState] lostOpponent()}
+      neutral -> neutral { [fpsState = neutralState] receiveBlow()}
       attack  -> neutral{ [health > 0 ] receiveBlow()}
       attack  -> die    { [health <= 0] receiveBlow()}
+      attack  -> attack { [fpsState = attackState] seeOpponent()}
       panic   -> neutral{ [health > 0 ] receiveBlow()}
       panic   -> die    { [health <= 0] receiveBlow()}
+      panic   -> panic  { [fpsState = panicState] seeOpponent()}
+      die     -> die    { [fpsState = dieState] seeOpponent()}
+      die     -> die    { [fpsState = dieState] receiveBlow()}
+      die     -> die    { [fpsState = dieState] lostOpponent()}
   end
 end
 
@@ -191,36 +197,36 @@ association fpsState between
 end
 
 association choiceLoad between
-  Play[1] role play
+  Play[1] role playSpec
   LoadOut[*] role gear
 end
 
 association saveChoice between
-  Play[1] role play
+  Play[1] role playSpec
   Save[*] role save
 end
 
 association objectives between
-  Play[1] role play
+  Play[1] role playSpec
   Objective[*] role goalObject
 end
 
 association level between
-  Play[1] role play
+  Play[1] role playSpec
   Level[1] role levelOn
 end
 
 association enemies between
-  Play[1] role play
+  Play[1] role playSpec
   Enemy[*] role enemy
 end
 
 association destructableObjects between
-  Play[1] role play
+  Play[1] role playSpec
   DestructableEnvironment[*] role objects
 end
 
 association helpfulItems between
-  Play[1] role play
+  Play[1] role playSpec
   Stockpiles[*] role pickUps
 end
