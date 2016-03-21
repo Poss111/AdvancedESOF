@@ -8,7 +8,7 @@ abstract class FPSState
     lostOpponent()
       begin
       end
-    receiveBlow(health:Integer)
+    receiveBlow(blow:Integer)
       begin
       end
 end
@@ -32,7 +32,7 @@ class neutral < FPSState
         WriteLine('In state:neutral operation:lostOpponent There is no opponent. You must find one first.')
       end
 
-    receiveBlow(health:Integer)
+    receiveBlow(blow:Integer)
       begin
         WriteLine('In state:neutral operation:receiveBlow There is no opponent. You must find one first to receieve a blow.')
       end
@@ -49,11 +49,16 @@ class attack < FPSState
       WriteLine('Lost to opponent, but not dead. Return to Idle');
       self.play.fpsState := self.play.neutralState
     end
-  receiveBlow(health:Integer)
+  receiveBlow(blow:Integer)
     begin
-      if (health = 0) then
-        WriteLine('Received blow from opponent, health at 0 die.');
+      self.play.health := self.play.health - blow;
+      if (self.play.health <= 0) then
+        WriteLine('Received blow from opponent, health at 0, you die.');
         self.play.fpsState := self.play.dieState
+      end;
+      if (self.play.health > 0) then
+        WriteLine('Received blow from opponent, but still alive.');
+        self.play.fpsState := self.play.attackState
       end;
     end
 end
@@ -69,12 +74,10 @@ class panic < FPSState
       WriteLine('Lost to opponent, and not dead. Return to Idle.');
       self.play.fpsState := self.play.neutralState
     end
-  receiveBlow(health:Integer)
+  receiveBlow(blow:Integer)
     begin
-      if (health >= 0) then
         WriteLine('Received blow, and in a panic. Dead!');
         self.play.fpsState := self.play.dieState
-      end;
     end
 end
 
@@ -87,7 +90,7 @@ class die < FPSState
     lostOpponent()
       begin
       end
-    receiveBlow(health:Integer)
+    receiveBlow(blow:Integer)
       begin
       end
 end
@@ -168,21 +171,22 @@ class Play
     psm StatePattern
     states
       startUp:initial
-      neutral       [self.fpsState = neutralState]
-      attack        [self.fpsState = attackState]
-      panic         [self.fpsState = panicState]
-      die           [self.fpsState = dieState]
+      neutral       [fpsState = neutralState]
+      attack        [fpsState = attackState]
+      panic         [fpsState = panicState]
+      die           [fpsState = dieState]
     transitions
       startUp -> neutral {create}
-      neutral -> attack { [health > 0 and defeatable = true]  seeOpponent()}
-      neutral -> panic  { [health > 0 and defeatable = false] seeOpponent()}
+      neutral -> attack { [defeatable = true and fpsState = neutralState]  seeOpponent()}
+      neutral -> panic  { [defeatable = false and fpsState = neutralState] seeOpponent()}
       neutral -> neutral { [fpsState = neutralState] lostOpponent()}
       neutral -> neutral { [fpsState = neutralState] receiveBlow()}
-      attack  -> neutral{ [health > 0 ] receiveBlow()}
-      attack  -> die    { [health <= 0] receiveBlow()}
+      attack  -> neutral { [fpsState = attackState] lostOpponent()}
+      attack  -> die    { [health <= 0 and fpsState = attackState] receiveBlow()}
+      attack  -> attack { [health > 0 and fpsState = attackState] receiveBlow()}
       attack  -> attack { [fpsState = attackState] seeOpponent()}
-      panic   -> neutral{ [health > 0 ] receiveBlow()}
-      panic   -> die    { [health <= 0] receiveBlow()}
+      panic   -> neutral { [fpsState = panicState] lostOpponent()}
+      panic   -> die    { [fpsState = panicState] receiveBlow()}
       panic   -> panic  { [fpsState = panicState] seeOpponent()}
       die     -> die    { [fpsState = dieState] seeOpponent()}
       die     -> die    { [fpsState = dieState] receiveBlow()}
@@ -191,9 +195,9 @@ class Play
 end
 
 -- associations
-association fpsState between
- FPSState[1]
- Play[1]
+association state between
+ FPSState[1] role fpsState
+ Play[1] role play
 end
 
 association choiceLoad between
